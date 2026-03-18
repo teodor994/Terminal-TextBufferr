@@ -241,4 +241,12 @@ public class TerminalBuffer {
         int physicalRow = getScreenRowPhysical(row);
         buffer[physicalRow][col].reset(' ', 0, 0, false, false, false);
     }
+
+    public int getCursorCol() {
+        return this.cursorCol;
+    }
+
+    public int getCursorRow() {
+        return this.cursorRow;
+    }
 }
