@@ -73,6 +73,18 @@ public class TerminalBuffer {
         setCursor(cursorCol + deltaCol, cursorRow + deltaRow);
     }
 
+    // Clear screen AND scrollback (Hard reset)
+    public void clearAll() {
+        startPtr = 0;
+        totalLines = height;
+        for (int r = 0; r < totalCapacity; r++) {
+            for (int c = 0; c < width; c++) {
+                buffer[r][c].reset(' ', 0, 0, false, false, false);
+            }
+        }
+        cursorCol = 0;
+        cursorRow = 0;
+    }
 
     private Cell getCellAtScreenPos(int col, int row) {
         int scrollbackCount = Math.max(0, totalLines - height);
@@ -133,5 +145,41 @@ public class TerminalBuffer {
         return getPhysicalIndex(scrollbackCount + screenRow);
     }
 
+    public void fillCurrentLine(char c) {
+        int physicalRow = getScreenRowPhysical(cursorRow);
+        for (int col = 0; col < width; col++) {
+            buffer[physicalRow][col].reset(c, currentFg, currentBg, bold, italic, underline);
+        }
+    }
 
+    // line as String
+    public String getLineContent(int logicalRow) {
+        if (logicalRow < 0 || logicalRow >= totalLines) return "";
+
+        int physicalIndex = getPhysicalIndex(logicalRow);
+        StringBuilder sb = new StringBuilder();
+        for (Cell cell : buffer[physicalIndex]) {
+            sb.append(cell.character);
+        }
+        return sb.toString();
+    }
+
+    // screen as String
+    public String getScreenAsString() {
+        StringBuilder sb = new StringBuilder();
+        int scrollbackCount = Math.max(0, totalLines - height);
+        for (int i = 0; i < height; i++) {
+            sb.append(getLineContent(scrollbackCount + i)).append("\n");
+        }
+        return sb.toString();
+    }
+
+    // Get everything (Scrollback + Screen)
+    public String getAllVisibleHistoryAsString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < totalLines; i++) {
+            sb.append(getLineContent(i)).append("\n");
+        }
+        return sb.toString();
+    }
 }
