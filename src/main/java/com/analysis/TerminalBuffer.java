@@ -227,12 +227,36 @@ public class TerminalBuffer {
             cursorCol--;
             clearCell(cursorCol, cursorRow);
         } else {
-            // Reverse Wrap
             if (cursorRow > 0) {
                 cursorRow--;
-                cursorCol = width - 1;
-                clearCell(cursorCol, cursorRow);
+                moveToEndOfTextOnRow(cursorRow);
+            } else {
+                int scrollbackCount = Math.max(0, totalLines - height);
+
+                if (scrollbackCount > 0) {
+                    startPtr = (startPtr - 1 + totalCapacity) % totalCapacity;
+
+                    moveToEndOfTextOnRow(0);
+                }
             }
+        }
+    }
+
+    private void moveToEndOfTextOnRow(int screenRow) {
+        int physRow = getScreenRowPhysical(screenRow);
+        int lastContentCol = 0;
+
+        for (int c = width - 1; c >= 0; c--) {
+            if (buffer[physRow][c].character != ' ') {
+                lastContentCol = Math.min(c + 1, width - 1);
+                break;
+            }
+        }
+        cursorCol = lastContentCol;
+
+        if (cursorCol > 0) {
+            cursorCol--;
+            clearCell(cursorCol, screenRow);
         }
     }
 
